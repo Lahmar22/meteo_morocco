@@ -71,7 +71,6 @@ def conserve_data():
 
 
 def transformer_data():
-    """Transform nested weather data into a flat table."""
 
     data = conserve_data()
 
@@ -107,27 +106,22 @@ def transformer_data():
 
 
 def save_data():
-    """Save transformed weather data."""
-
     df = transformer_data()
 
     if df is None:
         return
 
     os.makedirs("data", exist_ok=True)
-
     df.to_csv(
-        "data/weather_maroc.csv",
+        "broze/weather_maroc.csv",
         index=False
     )
-
     print("✅ Weather data saved successfully.")
     print(f"📊 Number of rows: {len(df)}")
     print(df.head())
 
 
 if __name__ == "__main__":
-
 
     get_params()
 
