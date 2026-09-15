@@ -111,9 +111,9 @@ def save_data():
     if df is None:
         return
 
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("bronze", exist_ok=True)
     df.to_csv(
-        "broze/weather_maroc.csv",
+        "bronze/weather_maroc.csv",
         index=False
     )
     print("✅ Weather data saved successfully.")
@@ -121,8 +121,108 @@ def save_data():
     print(df.head())
 
 
+def nettoyage_data():
+    data = pd.read_csv("bronze/weather_maroc.csv")
+    data["city"] = data["city"].astype(str).str.strip()
+
+    data["latitude"] = pd.to_numeric(data["latitude"], errors="coerce")
+    data["longitude"] = pd.to_numeric(data["longitude"], errors="coerce")
+
+    data["date"] = pd.to_datetime(data["date"], errors="coerce")
+    data["temp_max"] = pd.to_numeric(data["temp_max"], errors="coerce")
+    data["temp_min"] = pd.to_numeric(data["temp_min"], errors="coerce")
+    data = data.drop_duplicates()
+
+    data = data[(data["latitude"].between(27, 36)) & (data["longitude"].between(-14, -1))]
+
+    data = data[data["temp_max"] >= data["temp_min"]]
+
+    data = data[data["precipitation"] >= 0]
+    data = data[data["wind_speed"] >= 0]
+
+    
+
+    os.makedirs("Silver", exist_ok=True)
+    data.to_csv(
+        "Silver/weather_maroc_claire.csv",
+        index=False
+    )
+
+def categorie_temperature(temp):
+    if temp < 10:
+        return "Froid"
+    elif temp < 20:
+        return "Frais"
+    elif temp < 30:
+        return "Modéré"
+    elif temp < 40:
+        return "Chaud"
+    else:
+        return "Très chaud"
+
+def categorie_precipitation(value):
+    if value == 0:
+        return "Aucune"
+    elif value < 5:
+        return "Faible"
+    elif value < 20:
+        return "Modérée"
+    else:
+        return "Forte"
+
+def categorie_vent(speed):
+    if speed < 10:
+        return "Faible"
+    elif speed < 30:
+        return "Modéré"
+    elif speed < 50:
+        return "Fort"
+    else:
+        return "Très fort"
+
+def categorie_data():
+    data = pd.read_csv("Silver/weather_maroc_claire.csv")
+    
+    data["temperature_category"] = data["temp_max"].apply(
+        categorie_temperature
+    )
+    data["precipitation_category"] = data["precipitation"].apply(
+        categorie_precipitation
+    )
+    data["wind_category"] = data["wind_speed"].apply(
+         categorie_vent
+    )
+
+    danger_percentage = (
+        data["temp_max"] * 0.20
+        + data["precipitation"] * 0.40
+        + data["wind_speed"] * 0.40
+    )
+
+    data["score"] = danger_percentage
+
+    bins = [0, 25, 50, 75, 100]
+    labels = ["Faible", "Modéré", "Élevé", "Critique"]
+    data["danger"] = pd.cut(
+        data["score"],
+        bins=bins,
+        labels=labels,
+        include_lowest=True
+    )
+    os.makedirs("Gold", exist_ok=True)
+    data.to_csv("Gold/weather_maroc_final.csv", index=False)
+
+    
+    
+
+    
+
+
+    
+
 if __name__ == "__main__":
 
-    get_params()
+    # get_params()
 
-    save_data()
+    # save_data()
+    categorie_data()
