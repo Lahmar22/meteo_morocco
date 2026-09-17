@@ -44,8 +44,8 @@ services:
 
   streamlit:
     build:
-      context: ./streamlit
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: streamlit/Dockerfile
     container_name: streamlit
     restart: unless-stopped
     depends_on:
